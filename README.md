@@ -1,31 +1,47 @@
 # AmiConnect_Prototype
 
-AmiConnect is a Korean smart-home voice command MVP for senior-care scenarios.
-It demonstrates a local-first voice pipeline that can run from a Mac terminal:
+AmiConnect_Prototype은 시니어 케어 상황을 가정한 한국어 스마트홈 음성 명령 MVP입니다.
+마이크 또는 텍스트 입력부터 명령 이해, 실행 결과 출력, 음성 응답까지 하나의 터미널 파이프라인으로 연결합니다.
 
 ```text
-Mic / WAV / Text
-  -> STT
+마이크 / WAV / 텍스트
+  -> Moonshine STT
   -> Router
-  -> Local TLM or Gemini fallback
-  -> Mock executor
-  -> TTS
+  -> local TLM 또는 Gemini fallback
+  -> mock 스마트홈 executor
+  -> TTS 응답
 ```
 
-The project is intentionally published as an MVP prototype.
-It is not production-ready, not medical-grade software, and does not control real devices by default.
+이 저장소는 완성형 제품이 아니라, 한국어 음성 명령 기반 스마트홈 파이프라인이 실제로 어떻게 동작하는지 보여주는 프로토타입입니다.
 
-## What It Shows
+## 주요 기능
 
-- Korean STT with Moonshine
-- Rule/TLM based local command handling
-- Gemini fallback for complex natural language commands
-- Senior-care safety policies such as minimum brightness instead of full lights-off
-- Mock command execution for smart-home actions
-- TTS output through macOS `say` or MeloTTS
-- Privacy mode that blocks cloud LLM calls
+- 텍스트, WAV 파일, 마이크 입력을 통한 한국어 명령 테스트
+- fine-tuned TLM checkpoint 기반 local command routing
+- 일부 복합 명령에 대한 Gemini fallback
+- cloud LLM 호출을 막는 privacy mode
+- "불 꺼줘" 요청 시 완전 소등 대신 최소 밝기를 유지하는 시니어 케어 정책 예시
+- 실제 기기 제어 대신 command JSON을 출력하는 mock executor
+- macOS `say` 기반 TTS 응답
+- 선택적으로 MeloTTS backend 사용 가능
 
-## Quick Start
+## 저장소 구성
+
+```text
+src/orchestrator.py      전체 파이프라인 실행 진입점
+src/router/             local/cloud 라우팅
+src/tlm/                TLM 추론 코드
+src/cloud_llm/          Gemini NLU fallback
+src/stt/                Moonshine STT wrapper
+src/tts/                system/MeloTTS wrapper
+src/executor/           mock command executor
+models/tlm/...          MVP 재현용 fine-tuned TLM checkpoint
+data/demo/              데모용 복약 일정 데이터
+```
+
+학습 데이터, 생성된 음성 파일, 개인 환경 변수 파일, 내부 팀 문서는 포함하지 않았습니다.
+
+## 빠른 실행
 
 ```bash
 python -m venv .venv
@@ -34,57 +50,77 @@ pip install -e '.[dev]'
 cp .env.example .env
 ```
 
-Set `GEMINI_API_KEY` in `.env` only if you want to test Gemini fallback.
-Never commit `.env`.
+Gemini fallback을 테스트하려면 `.env`에 `GEMINI_API_KEY`를 설정해야 합니다.
+`.env` 파일은 절대 커밋하지 않습니다.
 
-### Local/privacy command
+## 실행 예시
+
+cloud 호출 없이 local route만 확인:
 
 ```bash
 python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend system
 ```
 
-### Gemini fallback command
+Gemini fallback route 확인:
 
 ```bash
 python -m src.orchestrator --text "자기 전 분위기로 해줘" --tts-backend system
 ```
 
-### Routing only
+음성 출력 없이 routing만 확인:
 
 ```bash
 python -m src.orchestrator --text "자기 전 분위기로 해줘" --tts-backend none
 ```
 
-## TTS Options
+마이크 입력 전체 파이프라인:
 
 ```bash
-python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend system
-python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend auto
-python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend none
+python -m src.orchestrator --mic --tts-backend system
 ```
 
-Backend summary:
+## 예시 명령
 
-- `system`: macOS `say`
-- `melo`: MeloTTS
-- `auto`: MeloTTS first, then system fallback
-- `none`: disable speech output
+```text
+거실 불 꺼줘
+약 먹을 시간 됐나
+지금 몇 시야
+오늘 날씨 어때
+자기 전 분위기로 해줘
+```
 
-## Documentation
+## TTS Backend
 
-- `QUICKSTART.md`: setup and command examples
-- `docs/MVP_PIPELINE.md`: current MVP pipeline
+```text
+system  macOS say 사용
+melo    MeloTTS 사용
+auto    MeloTTS 먼저 시도 후 system fallback
+none    음성 출력 비활성화
+```
 
-## Current Limitations
+macOS에서 가장 안정적으로 데모하려면 `--tts-backend system`을 권장합니다.
 
-- The executor is a mock console output, not real Matter/IFTTT control.
-- MeloTTS uses generated WAV chunks, not true streaming PCM.
-- Gemini fallback depends on API and network latency.
-- Privacy mode disables cloud fallback, so complex commands are limited by local routing.
-- The snapshot includes one fine-tuned TLM checkpoint for MVP reproduction.
-- Generated audio files are not included.
+## 환경 변수
 
-## Security
+환경 변수는 `.env`에서 로드됩니다.
 
-API keys must stay in local `.env` files only.
-The AmiConnect_Prototype repo should include `.env.example` with placeholders, but never `.env`.
+```env
+GEMINI_API_KEY=your-gemini-api-key-here
+GEMINI_MODEL=gemini-2.5-flash-lite
+AMICONNECT_PRIVACY_MODE=false
+AMICONNECT_TTS_BACKEND=system
+```
+
+API key는 로컬 `.env`에만 두어야 합니다.
+이 저장소에는 placeholder가 들어간 `.env.example`만 포함합니다.
+
+## 문서
+
+- `QUICKSTART.md`: 설치 및 실행 명령
+- `docs/MVP_PIPELINE.md`: 현재 파이프라인 상세 정리
+
+## 참고
+
+- executor는 실제 IoT 기기 제어가 아니라 데모용 mock layer입니다.
+- Gemini fallback은 API와 네트워크 상태에 따라 latency가 달라질 수 있습니다.
+- MeloTTS는 파일 생성 기반으로 동작하며, macOS에서는 `say`가 가장 간단한 TTS 옵션입니다.
