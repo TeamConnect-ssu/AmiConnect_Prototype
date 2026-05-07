@@ -1,0 +1,42 @@
+# Env
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Models / data
+models/
+data/raw/
+data/gold/
+results/
+*.onnx
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.aiff
+*.aif
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# AmiConnect_Prototype includes one fine-tuned TLM checkpoint.
+!models/
+!models/tlm/
+!models/tlm/kominilm-finetuned/
+!models/tlm/kominilm-finetuned/config.json
+!models/tlm/kominilm-finetuned/label_mappings.json
+!models/tlm/kominilm-finetuned/model.pt

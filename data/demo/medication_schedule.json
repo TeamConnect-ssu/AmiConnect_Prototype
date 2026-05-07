@@ -1,0 +1,21 @@
+{
+  "patient": "어르신",
+  "medications": [
+    {
+      "name": "혈압약",
+      "times": [
+        "오전 9시"
+      ],
+      "with_meal": false,
+      "note": "오전 9시"
+    },
+    {
+      "name": "비타민",
+      "times": [
+        "오후 6시"
+      ],
+      "with_meal": false,
+      "note": "오후 6시"
+    }
+  ]
+}
