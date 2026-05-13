@@ -11,7 +11,9 @@ class PipelineResult:
     transcript: str = ""
     intent: str = ""
     slots: dict[str, str] = field(default_factory=dict)
-    route: str = ""          # rule | llm | privacy_fallback
+    route: str = ""          # KoMiniLM | RuleTLM | Gateway | privacy_fallback
+    confidence: float = 0.0
+    model: str = ""
     command: dict[str, Any] = field(default_factory=dict)
     response_text: str = ""
     error: str = ""
@@ -23,6 +25,8 @@ class PipelineResult:
             "intent": self.intent,
             "slots": self.slots,
             "route": self.route,
+            "confidence": self.confidence,
+            "model": self.model,
             "command": self.command,
             "response_text": self.response_text,
             "error": self.error,

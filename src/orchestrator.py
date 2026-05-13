@@ -1,5 +1,5 @@
 """End-to-end MVP pipeline (Mac terminal):
-mic -> VAD -> Moonshine STT -> Router(Local rule TLM | Gemini Flash Lite) -> Executor -> TTS -> Rich console.
+mic -> VAD -> Moonshine STT -> Router(Local rule TLM | Mindlogic Gateway) -> Executor -> TTS -> Rich console.
 """
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def _result_table(result: PipelineResult, latency_ms: dict[str, float]) -> Table
     tbl.add_row("STT 텍스트", f"[bold white]{result.transcript}[/bold white]")
     tbl.add_row(
         "Intent",
-        f"[bold green]{result.intent}[/bold green]  route=[yellow]{result.route}[/yellow]",
+        f"[bold green]{result.intent}[/bold green]  route=[yellow]{result.route}[/yellow]  confidence=[cyan]{result.confidence:.2f}[/cyan]",
     )
     slot_str = ", ".join(f"{k}={v}" for k, v in result.slots.items()) or "[dim](none)[/dim]"
     tbl.add_row("Slots", slot_str)
@@ -228,7 +228,7 @@ def main() -> None:
         default=os.environ.get("AMICONNECT_TTS_BACKEND", "system").lower(),
         help="TTS backend: system=macOS say, melo=MeloTTS, auto=Melo then system, none=disable",
     )
-    parser.add_argument("--privacy", action="store_true", help="Gemini 호출 차단")
+    parser.add_argument("--privacy", action="store_true", help="cloud LLM 호출 차단")
     args = parser.parse_args()
 
     console = Console()

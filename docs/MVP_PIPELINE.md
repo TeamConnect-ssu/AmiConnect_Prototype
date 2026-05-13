@@ -14,8 +14,8 @@ STT: Moonshine-tiny-ko
         v
 Router
   - Privacy mode: local TLM only
-  - Known LLM demos: Gemini direct
-  - General input: local TLM first, unknown이면 Gemini fallback
+  - Known LLM demos: Mindlogic Gateway direct
+  - General input: local TLM first, unknown이면 Gateway fallback
         |
         v
 PipelineResult
@@ -117,7 +117,7 @@ python -m src.stt.moonshine samples/example.wav
 
 - `src/router/router.py`
 - `src/tlm/infer.py`
-- `src/cloud_llm/gemini.py`
+- `src/cloud_llm/gateway.py`
 
 Router는 최종적으로 `PipelineResult`를 만든다.
 
@@ -135,7 +135,7 @@ PipelineResult(
 
 ### Privacy Mode
 
-`--privacy`를 주면 Gemini를 절대 호출하지 않는다.
+`--privacy`를 주면 cloud LLM을 절대 호출하지 않는다.
 
 ```bash
 python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend system
@@ -185,23 +185,24 @@ Senior-care 정책 예시:
 - 취침 장면은 침실 조명 20%, 색온도 2200K, night mode를 적용한다.
 - 복약 조회/저장은 `data/medication_schedule.json`을 사용한다.
 
-### Gemini LLM
+### Mindlogic Gateway LLM
 
-Gemini는 local TLM으로 처리하기 어렵거나 복합적인 자연어 명령을 처리한다.
+Mindlogic Gateway는 local TLM으로 처리하기 어렵거나 복합적인 자연어 명령을 처리한다.
 
 필수 환경 변수:
 
 ```env
-GEMINI_API_KEY=...
-GEMINI_MODEL=gemini-2.5-flash-lite
+FACTCHAT_API_KEY=...
+FACTCHAT_BASE_URL=https://factchat-cloud.mindlogic.ai/v1/gateway
+FACTCHAT_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-현재 Gemini 설정:
+현재 Gateway 설정:
 
-- JSON 응답 강제: `responseMimeType="application/json"`
+- OpenAI 호환 Chat Completions: `/chat/completions/`
+- JSON 응답 요청: `response_format={"type":"json_object"}`
 - deterministic 출력: `temperature=0.0`
-- thinking off: `thinkingBudget=0`
-- 최대 출력: `maxOutputTokens=320`
+- 최대 출력: `max_tokens=320`
 
 LLM으로 바로 보내는 demo 문장:
 
@@ -210,7 +211,7 @@ LLM으로 바로 보내는 demo 문장:
 오늘따라 좀 답답하네 환기 좀 해줘
 ```
 
-이 문장들은 privacy mode가 아닐 때 local TLM 로딩 없이 Gemini로 바로 간다.
+이 문장들은 privacy mode가 아닐 때 local TLM 로딩 없이 Gateway로 바로 간다.
 
 ## 5. Command와 Executor
 
@@ -362,10 +363,10 @@ Latency audio: ... | stt: ... | nlu: ...
 
 - `audio`: VAD가 잘라낸 오디오 길이
 - `stt`: Moonshine STT 처리 시간
-- `nlu`: Router 처리 시간. LLM route면 Gemini API 호출 시간이 포함된다.
+- `nlu`: Router 처리 시간. LLM route면 Gateway API 호출 시간이 포함된다.
 
 LLM route의 `nlu`는 같은 문장이어도 2초와 9초처럼 차이가 날 수 있다.
-현재 temperature는 `0.0`이라 출력 랜덤성은 줄였지만, API 왕복 시간과 Gemini 서버 상태는 여전히 영향을 준다.
+현재 temperature는 `0.0`이라 출력 랜덤성은 줄였지만, API 왕복 시간과 Gateway 서버 상태는 여전히 영향을 준다.
 
 TTS 재생 시간은 현재 `Latency`에 포함되지 않는다.
 `run_text` 기준으로는 Router 시간을 잰 뒤 `_process()`에서 executor/TTS가 실행된다.
@@ -406,18 +407,18 @@ ls models/tlm/kominilm-finetuned/model.pt
 
 이 파일이 없으면 Router는 `RuleTLM 사용 (학습 모델 없음)`을 출력한다.
 
-### Gemini API key 오류
+### Gateway API key 오류
 
-`.env`에 `GEMINI_API_KEY`가 있는지 확인한다.
+`.env`에 `FACTCHAT_API_KEY`가 있는지 확인한다.
 
 ```bash
 python - <<'PY'
 from pathlib import Path
 for line in Path(".env").read_text().splitlines():
-    if line.startswith("GEMINI_API_KEY="):
-        print("GEMINI_API_KEY:", "set" if line.split("=", 1)[1].strip() else "empty")
-    if line.startswith("GEMINI_MODEL="):
-        print("GEMINI_MODEL:", line.split("=", 1)[1].strip())
+    if line.startswith("FACTCHAT_API_KEY="):
+        print("FACTCHAT_API_KEY:", "set" if line.split("=", 1)[1].strip() else "empty")
+    if line.startswith("FACTCHAT_MODEL="):
+        print("FACTCHAT_MODEL:", line.split("=", 1)[1].strip())
 PY
 ```
 

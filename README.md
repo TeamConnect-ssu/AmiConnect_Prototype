@@ -7,7 +7,7 @@ AmiConnect_Prototype은 시니어 케어 상황을 가정한 한국어 스마트
 마이크 / WAV / 텍스트
   -> Moonshine STT
   -> Router
-  -> local TLM 또는 Gemini fallback
+  -> local TLM 또는 Mindlogic Gateway fallback
   -> mock 스마트홈 executor
   -> TTS 응답
 ```
@@ -18,7 +18,7 @@ AmiConnect_Prototype은 시니어 케어 상황을 가정한 한국어 스마트
 
 - 텍스트, WAV 파일, 마이크 입력을 통한 한국어 명령 테스트
 - fine-tuned TLM checkpoint 기반 local command routing
-- 일부 복합 명령에 대한 Gemini fallback
+- 일부 복합 명령에 대한 Mindlogic Gateway fallback
 - cloud LLM 호출을 막는 privacy mode
 - "불 꺼줘" 요청 시 완전 소등 대신 최소 밝기를 유지하는 시니어 케어 정책 예시
 - 실제 기기 제어 대신 command JSON을 출력하는 mock executor
@@ -31,7 +31,7 @@ AmiConnect_Prototype은 시니어 케어 상황을 가정한 한국어 스마트
 src/orchestrator.py      전체 파이프라인 실행 진입점
 src/router/             local/cloud 라우팅
 src/tlm/                TLM 추론 코드
-src/cloud_llm/          Gemini NLU fallback
+src/cloud_llm/          Mindlogic Gateway NLU fallback
 src/stt/                Moonshine STT wrapper
 src/tts/                system/MeloTTS wrapper
 src/executor/           mock command executor
@@ -50,10 +50,23 @@ pip install -e '.[dev]'
 cp .env.example .env
 ```
 
-Gemini fallback을 테스트하려면 `.env`에 `GEMINI_API_KEY`를 설정해야 합니다.
+Gateway fallback을 테스트하려면 `.env`에 `FACTCHAT_API_KEY`를 설정해야 합니다.
 `.env` 파일은 절대 커밋하지 않습니다.
 
 ## 실행 예시
+
+캡처/발표용 MVP runner:
+
+```bash
+python demo/mvp_runner_dongu.py
+python demo/mvp_runner_prugio.py
+```
+
+위 runner는 실제 Router와 KoMiniLM checkpoint를 사용해 다음 흐름을 보여줍니다.
+
+```text
+wake word -> STT transcript -> Intent/Slots/Confidence -> Policy -> mock Action
+```
 
 cloud 호출 없이 local route만 확인:
 
@@ -61,7 +74,7 @@ cloud 호출 없이 local route만 확인:
 python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend system
 ```
 
-Gemini fallback route 확인:
+Gateway fallback route 확인:
 
 ```bash
 python -m src.orchestrator --text "자기 전 분위기로 해줘" --tts-backend system
@@ -77,6 +90,13 @@ python -m src.orchestrator --text "자기 전 분위기로 해줘" --tts-backend
 
 ```bash
 python -m src.orchestrator --mic --tts-backend system
+```
+
+STT는 코드에 포함되어 있으며, 마이크 모드는 로컬 마이크 권한과 Moonshine 모델 다운로드/캐시 상태에 따라 첫 실행 시간이 달라질 수 있습니다.
+샘플 WAV 파일은 저장소에 포함하지 않았습니다. 로컬 WAV를 넣어 테스트하려면 다음처럼 실행합니다.
+
+```bash
+python -m src.orchestrator --audio-file path/to/sample.wav --privacy --tts-backend none
 ```
 
 ## 예시 명령
@@ -105,8 +125,9 @@ macOS에서 가장 안정적으로 데모하려면 `--tts-backend system`을 권
 환경 변수는 `.env`에서 로드됩니다.
 
 ```env
-GEMINI_API_KEY=your-gemini-api-key-here
-GEMINI_MODEL=gemini-2.5-flash-lite
+FACTCHAT_API_KEY=your-factchat-api-key-here
+FACTCHAT_BASE_URL=https://factchat-cloud.mindlogic.ai/v1/gateway
+FACTCHAT_MODEL=gemini-3.1-flash-lite-preview
 AMICONNECT_PRIVACY_MODE=false
 AMICONNECT_TTS_BACKEND=system
 ```
@@ -122,5 +143,7 @@ API key는 로컬 `.env`에만 두어야 합니다.
 ## 참고
 
 - executor는 실제 IoT 기기 제어가 아니라 데모용 mock layer입니다.
-- Gemini fallback은 API와 네트워크 상태에 따라 latency가 달라질 수 있습니다.
+- fine-tuned KoMiniLM checkpoint는 GitHub 단일 파일 제한에 맞는 약 89MB 파일로 포함됩니다.
+- Gateway fallback은 별도 `FACTCHAT_API_KEY`가 있어야 동작합니다. Privacy mode/local demo는 키 없이도 실행됩니다.
+- Gateway fallback은 API와 네트워크 상태에 따라 latency가 달라질 수 있습니다.
 - MeloTTS는 파일 생성 기반으로 동작하며, macOS에서는 `say`가 가장 간단한 TTS 옵션입니다.

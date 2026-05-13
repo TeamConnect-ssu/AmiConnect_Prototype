@@ -16,6 +16,12 @@
       ],
       "with_meal": false,
       "note": "오후 6시"
+    },
+    {
+      "name": "병원",
+      "times": [],
+      "with_meal": false,
+      "note": null
     }
   ]
 }

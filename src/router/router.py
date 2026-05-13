@@ -1,7 +1,7 @@
-"""Route between local TLM and Gemini cloud NLU (MVP_TEAM_GUIDE §3).
+"""Route between local TLM and Mindlogic Gateway cloud NLU (MVP_TEAM_GUIDE §3).
 
 MVP routing: transcripts matching the 10 demo cases are hardcoded by route.
-General input: rule TLM first; on unknown intent, falls back to Gemini.
+General input: rule TLM first; on unknown intent, falls back to Gateway.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _FINETUNED_MODEL = _REPO_ROOT / "models/tlm/kominilm-finetuned/model.pt"
 
 
 # demo_001~007, 009 → rule (TLM)
-# demo_008, 010 → llm (Gemini)
+# demo_008, 010 → llm (Mindlogic Gateway)
 _LLM_TRANSCRIPTS: set[str] = {
     "자기 전 분위기로 해줘",
     "오늘따라 좀 답답하네 환기 좀 해줘",
@@ -44,8 +44,8 @@ class Router:
     @property
     def cloud(self):
         if self._cloud is None:
-            from src.cloud_llm.gemini import GeminiNLU
-            self._cloud = GeminiNLU()
+            from src.cloud_llm.gateway import GatewayNLU
+            self._cloud = GatewayNLU()
         return self._cloud
 
     def route(self, text: str, request_id: str = "") -> PipelineResult:
@@ -61,6 +61,8 @@ class Router:
             if local.intent == "unknown":
                 result.error = "복합 명령은 지금 처리할 수 없습니다 (privacy mode)"
                 result.route = "privacy_fallback"
+                result.confidence = local.confidence
+                result.model = local.source
                 return result
             return self._from_tlm(result, local)
 
@@ -69,13 +71,15 @@ class Router:
         if local.intent != "unknown":
             return self._from_tlm(result, local)
 
-        # Fallback to Gemini for general unknown input
+        # Fallback to Gateway for general unknown input
         return self._call_cloud(result)
 
     def _from_tlm(self, result: PipelineResult, tlm) -> PipelineResult:
         result.intent = tlm.intent
         result.slots = tlm.slots
-        result.route = "rule"
+        result.route = "KoMiniLM" if tlm.source == "kominilm" else "RuleTLM"
+        result.confidence = tlm.confidence
+        result.model = tlm.source
         result.command = tlm.command
         result.response_text = tlm.response_text
         return result
@@ -84,13 +88,15 @@ class Router:
         try:
             cloud = self.cloud.parse(result.transcript)
         except Exception as exc:
-            result.route = "llm"
+            result.route = "Gateway"
             result.error = f"LLM 호출 실패: {exc}"
             result.response_text = "LLM 호출 설정을 확인해 주세요."
             return result
         result.intent = cloud.intent
         result.slots = cloud.slots
-        result.route = "llm"
+        result.route = "Gateway"
+        result.confidence = cloud.confidence
+        result.model = "gemini-3.1-flash-lite-preview"
         result.command = cloud.command
         result.response_text = cloud.response_text
         result.error = "" if cloud.intent != "unknown" else "LLM could not parse intent"

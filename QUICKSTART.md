@@ -1,7 +1,7 @@
 # AmiConnect — Mac MVP Quickstart
 
 라즈베리파이 없이 맥북 터미널에서 돌리는 1차 MVP입니다.
-파이프라인: **마이크 → VAD → STT(Moonshine) → Router(Local rule | Gemini Flash-Lite) → Rich 콘솔 출력**
+파이프라인: **마이크 → VAD → STT(Moonshine) → Router(Local rule | Mindlogic Gateway) → Rich 콘솔 출력**
 
 ## 현재 협업 기준
 
@@ -28,15 +28,22 @@ pip install -e .
 
 ```bash
 cp .env.example .env
-# .env 열어서 GEMINI_API_KEY 채우기
+# .env 열어서 FACTCHAT_API_KEY 채우기
 ```
 
 ## 3. 텍스트로 먼저 동작 확인 (마이크 X)
 
+발표/캡처용 runner:
+
+```bash
+python demo/mvp_runner_dongu.py
+python demo/mvp_runner_prugio.py
+```
+
 ```bash
 python -m src.orchestrator --text "거실 불 꺼줘"
 python -m src.orchestrator --text "약 먹을 시간 됐나?"
-python -m src.orchestrator --text "자기 전 분위기로"   # 룰에 없으면 Gemini로 폴백
+python -m src.orchestrator --text "자기 전 분위기로"   # 룰에 없으면 Gateway로 폴백
 python -m src.orchestrator --chat                    # 채팅처럼 여러 명령 연속 입력
 ```
 
@@ -55,7 +62,7 @@ python -c "import sounddevice as sd; print(sd.query_devices())"
 
 ## 5. 도경 STT 샘플 확인
 
-샘플 WAV 파일을 `shared/test_cases.json`의 `input_audio` 경로에 맞춰 둔 뒤 실행한다.
+샘플 WAV 파일을 `samples/senior_care/` 아래에 둔 뒤 실행한다. 공개 repo에는 실제 음성 파일을 포함하지 않는다.
 
 단일 음성 파일을 STT JSON으로 확인:
 
