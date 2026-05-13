@@ -127,13 +127,15 @@ python scripts/eval_nlu.py
 dataset: data/processed/valid.jsonl
 cases: 46
 intent accuracy: 43/46 = 93.5%
-strict slot exact match: 22/46 = 47.8%
-joint exact match: 21/46 = 45.7%
+slot entity precision/recall/F1: 100.0% / 98.3% / 99.1%
+strict slot exact match 참고값: 45/46 = 97.8%
+joint exact match: 43/46 = 93.5%
 NLU latency: warm inference mean 약 10ms, p95 약 10-12ms
 ```
 
 `intent accuracy`는 사용자의 발화를 어떤 작업으로 분류했는지 보는 주 지표입니다.
-`strict slot exact match`는 slot 문자열이 조사/어미 포함 여부까지 정확히 일치해야 하는 엄격한 참고 지표입니다.
+`slot entity F1`은 KoMiniLM BIO/CRF 출력에 도메인 slot normalizer를 적용한 뒤의 entity 단위 micro F1이며, slot 성능을 볼 때 주로 사용하는 지표입니다.
+`strict slot exact match`는 한 문장의 모든 slot 문자열이 조사/어미 포함 여부까지 정확히 일치해야 하는 엄격한 참고 지표입니다.
 latency는 실행 기기와 백그라운드 상태에 따라 조금 달라지므로, 현재 환경의 정확한 값은 `python scripts/eval_nlu.py`로 다시 확인합니다.
 
 ## 구성 요소

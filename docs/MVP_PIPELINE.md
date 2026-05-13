@@ -380,8 +380,9 @@ python scripts/eval_nlu.py
 ```text
 data/processed/valid.jsonl, 46 cases
 intent accuracy: 43/46 = 93.5%
-strict slot exact match: 22/46 = 47.8%
-joint exact match: 21/46 = 45.7%
+slot entity precision/recall/F1: 100.0% / 98.3% / 99.1%
+strict slot exact match: 45/46 = 97.8%
+joint exact match: 43/46 = 93.5%
 warm NLU latency: mean 약 10ms, p95 약 10-12ms
 ```
 

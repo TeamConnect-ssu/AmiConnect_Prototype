@@ -48,6 +48,11 @@ _LOCATION   = re.compile(r"(거실|안방|방|침실|주방|화장실|현관)")
 _LEVEL      = re.compile(r"(약하게|세게|밝게|어둡게|\d+\s*%|\d+\s*퍼센트)")
 _STATE_ON   = re.compile(r"(켜|켜줘|켜라|키주|키줘)")
 _TEMP       = re.compile(r"(\d+)\s*도")
+_DEVICE     = re.compile(r"(불|조명|에어컨|TV|티비|선풍기)")
+_TIME_EXPR  = re.compile(r"(이번\s*주|아침\s*식후|자기\s*전|지금|오늘|내일|모레|오전|오후|아침|점심|저녁|식전|식후|\d+\s*시)")
+_WEATHER_ATTRIBUTE = re.compile(r"(체감온도|비바람|날씨|기온|온도|비|눈|공기)")
+_MODE_EXPR = re.compile(r"(나갈\s*준비|공기\s*순환|자기\s*전|영화\s*모드|아침\s*모드|취침|수면|환기|분위기)")
+_BRIGHTNESS_LEVEL = re.compile(r"(줄여|낮춰|올려|밝게|어둡게|약하게|세게|\d+\s*%|\d+\s*퍼센트)")
 
 _LOCATION_TARGET: dict[str, str] = {
     "거실": "light.living_room",
@@ -203,6 +208,56 @@ def _build_command(intent: str, slots: dict[str, str], text: str) -> tuple[dict[
     return {}, ""
 
 
+def _supplement_slots(intent: str, slots: dict[str, str], text: str) -> dict[str, str]:
+    """Conservatively add obvious domain slots missed by the BIO/CRF decoder."""
+    slots = dict(slots)
+
+    if intent in {"turn_on", "turn_off", "set_brightness"}:
+        if "location" not in slots and (loc := _LOCATION.search(text)):
+            slots["location"] = loc.group(0)
+    if intent in {"turn_on", "turn_off"}:
+        if "device" not in slots and (device := _DEVICE.search(text)):
+            slots["device"] = device.group(0)
+
+    if intent == "set_brightness":
+        if "level" not in slots and (level := _BRIGHTNESS_LEVEL.search(text)):
+            slots["level"] = level.group(0).strip()
+
+    if intent in {"medication_reminder", "set_medication_schedule"}:
+        if "patient" not in slots and (patient := _PATIENT.search(text)):
+            slots["patient"] = patient.group(0)
+        if "medication" not in slots and (medication := _MEDICATION.search(text)):
+            slots["medication"] = medication.group(0)
+        if "time" not in slots and (time_expr := _TIME_EXPR.search(text)):
+            slots["time"] = time_expr.group(0).strip()
+
+    if intent == "weather_query":
+        if "time" not in slots and (time_expr := _TIME_EXPR.search(text)):
+            slots["time"] = time_expr.group(0).strip()
+        if attr := _WEATHER_ATTRIBUTE.search(text):
+            current = slots.get("attribute", "")
+            value = attr.group(0)
+            if not current or value in current or current in value:
+                slots["attribute"] = value
+
+    if intent == "time_query":
+        if "날짜" in text:
+            slots["attribute"] = "날짜"
+        elif "며칠" in text:
+            slots["attribute"] = "며칠"
+        elif "attribute" not in slots and re.search(r"(시간|몇\s*시)", text):
+            slots["attribute"] = "시간"
+
+    if intent == "ambient_mode":
+        if mode := _MODE_EXPR.search(text):
+            current = slots.get("mode", "")
+            value = mode.group(0).strip()
+            if not current or value in current or current in value:
+                slots["mode"] = value
+
+    return slots
+
+
 # ── KoMiniLMTLM ───────────────────────────────────────────────────────────────
 
 class KoMiniLMTLM:
@@ -249,6 +304,7 @@ class KoMiniLMTLM:
         # Slots via CRF decode
         slot_pred_ids = self._model.predict_slots(out["slot_logits"], attention_mask)[0]
         slots = self._decode_slots(text, slot_pred_ids, offset_mapping, attention_mask[0])
+        slots = _supplement_slots(intent, slots, text)
 
         command, response_text = ({}, "")
         if build_command:
