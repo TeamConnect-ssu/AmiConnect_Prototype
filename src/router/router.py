@@ -1,8 +1,4 @@
-"""Route between local TLM and Mindlogic Gateway cloud NLU (MVP_TEAM_GUIDE §3).
-
-MVP routing: transcripts matching the 10 demo cases are hardcoded by route.
-General input: rule TLM first; on unknown intent, falls back to Gateway.
-"""
+"""Route between local KoMiniLM/RuleTLM and Mindlogic Gateway cloud NLU."""
 from __future__ import annotations
 
 import os
@@ -16,19 +12,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _FINETUNED_MODEL = _REPO_ROOT / "models/tlm/kominilm-finetuned/model.pt"
 
 
-# demo_001~007, 009 → rule (TLM)
-# demo_008, 010 → llm (Mindlogic Gateway)
-_LLM_TRANSCRIPTS: set[str] = {
-    "자기 전 분위기로 해줘",
-    "오늘따라 좀 답답하네 환기 좀 해줘",
-}
-
-
 class Router:
     def __init__(self, privacy_mode: bool | None = None) -> None:
         self.local = None
         env_privacy = os.environ.get("AMICONNECT_PRIVACY_MODE", "false").lower() == "true"
         self.privacy_mode = privacy_mode if privacy_mode is not None else env_privacy
+        self.local_confidence_threshold = float(
+            os.environ.get("AMICONNECT_LOCAL_CONFIDENCE_THRESHOLD", "0.65")
+        )
         self._cloud = None
 
     def _ensure_local(self):
@@ -51,14 +42,10 @@ class Router:
     def route(self, text: str, request_id: str = "") -> PipelineResult:
         result = PipelineResult(request_id=request_id, transcript=text)
 
-        # Hardcoded LLM demos can bypass local model loading.
-        if not self.privacy_mode and text.strip() in _LLM_TRANSCRIPTS:
-            return self._call_cloud(result)
-
         # Privacy mode: never call cloud
         if self.privacy_mode:
             local = self._ensure_local().predict(text)
-            if local.intent == "unknown":
+            if local.intent == "unknown" or local.confidence < self.local_confidence_threshold:
                 result.error = "복합 명령은 지금 처리할 수 없습니다 (privacy mode)"
                 result.route = "privacy_fallback"
                 result.confidence = local.confidence
@@ -66,9 +53,9 @@ class Router:
                 return result
             return self._from_tlm(result, local)
 
-        # Try local rule first
+        # Try local model first; use Gateway only when local confidence is low.
         local = self._ensure_local().predict(text)
-        if local.intent != "unknown":
+        if local.intent != "unknown" and local.confidence >= self.local_confidence_threshold:
             return self._from_tlm(result, local)
 
         # Fallback to Gateway for general unknown input

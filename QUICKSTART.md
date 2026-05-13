@@ -1,16 +1,15 @@
 # AmiConnect — Mac MVP Quickstart
 
 라즈베리파이 없이 맥북 터미널에서 돌리는 1차 MVP입니다.
-파이프라인: **마이크 → VAD → STT(Moonshine) → Router(Local rule | Mindlogic Gateway) → Rich 콘솔 출력**
+파이프라인: **마이크 → VAD → STT(Moonshine) → Router(KoMiniLM | Mindlogic Gateway) → Rich 콘솔 출력 → TTS**
 
 ## 현재 협업 기준
 
 - 팀 협업용 MVP 기준 문서: [MVP_TEAM_GUIDE.md](./MVP_TEAM_GUIDE.md)
-- 현재 데모 목표는 예시 명령어 10개를 끝까지 처리하는 것
-- 이번 단계에서는 샘플별 `expected_route`를 기준으로 `TLM(rule)` 또는 `LLM`으로 고정 라우팅
-- 어려운 명령은 일반 모드에서 바로 `LLM`으로 전달
-- `privacy mode`는 현재 MVP 검증 대상이 아님
-- 정식 버전에서 `IoT_TLM_v1.2` 기반 라우팅으로 교체 예정
+- 현재 데모 목표는 시니어 케어 음성 명령을 텍스트/WAV/마이크 입력에서 끝까지 처리하는 것
+- local NLU는 fine-tuned KoMiniLM checkpoint를 우선 사용
+- privacy mode에서는 cloud LLM 호출 없이 local NLU 또는 privacy fallback만 사용
+- 복합 발화는 일반 모드에서 Mindlogic Gateway fallback으로 처리 가능
 
 ## 1. 가상환경 + 패키지
 
@@ -29,6 +28,7 @@ pip install -e .
 ```bash
 cp .env.example .env
 # .env 열어서 FACTCHAT_API_KEY 채우기
+# Gateway fallback 민감도 조정이 필요하면 AMICONNECT_LOCAL_CONFIDENCE_THRESHOLD 변경
 ```
 
 ## 3. 텍스트로 먼저 동작 확인 (마이크 X)
@@ -36,11 +36,21 @@ cp .env.example .env
 ```bash
 python -m src.orchestrator --text "거실 불 꺼줘"
 python -m src.orchestrator --text "약 먹을 시간 됐나?"
-python -m src.orchestrator --text "자기 전 분위기로"   # 룰에 없으면 Gateway로 폴백
+python -m src.orchestrator --text "자기 전 분위기로"   # confidence가 낮으면 Gateway로 폴백
 python -m src.orchestrator --chat                    # 채팅처럼 여러 명령 연속 입력
 ```
 
-## 4. 마이크 모드
+## 4. NLU 평가 재현
+
+현재 포함된 KoMiniLM checkpoint와 validation split으로 intent/slot 정확도와 NLU latency를 확인:
+
+```bash
+python scripts/eval_nlu.py
+```
+
+측정 대상은 `data/processed/valid.jsonl`입니다. 모델 로드와 tokenizer warm-up 시간은 latency에서 제외됩니다.
+
+## 5. 마이크 모드
 
 ```bash
 python -m src.orchestrator --mic
@@ -53,7 +63,7 @@ python -m src.orchestrator --mic --mic-index 0
 python -c "import sounddevice as sd; print(sd.query_devices())"
 ```
 
-## 5. 도경 STT 샘플 확인
+## 6. 도경 STT 샘플 확인
 
 샘플 WAV 파일을 `samples/senior_care/` 아래에 둔 뒤 실행한다. 공개 repo에는 실제 음성 파일을 포함하지 않는다.
 
@@ -95,22 +105,20 @@ python -m src.stt.evaluate_samples \
   --output-jsonl results/stt_samples.jsonl
 ```
 
-## 6. 옵션: Privacy 모드 실험
+## 7. 옵션: Privacy 모드 실험
 
 ```bash
 python -m src.orchestrator --mic --privacy
 ```
 
-현재 팀 MVP 검증 대상은 아니고, 필요할 때만 별도로 실험한다.
-룰에 매칭 안 되는 발화는 `복합 명령은 지금 처리할 수 없습니다` 폴백.
+cloud 호출을 막아야 하는 상황에서 사용한다.
+local KoMiniLM이 처리하지 못하는 발화는 `복합 명령은 지금 처리할 수 없습니다` 폴백.
 
 ---
 
 ## 다음 단계 (이번 MVP 범위 밖)
 
-- `src/tlm/infer.py`의 `RuleTLM`을 KoMiniLM 파인튜닝 모델로 교체
 - 웨이크워드(openWakeWord) 추가
-- TTS(MeloTTS) 추가 → 음성 응답
 - Hue/Matter 컨트롤러 연결
 - GitHub 레포 생성 후 협업 시작
 

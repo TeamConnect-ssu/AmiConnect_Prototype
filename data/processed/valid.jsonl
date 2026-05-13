@@ -1,0 +1,46 @@
+{"text": "위장약 식후에 먹어야제", "intent": "medication_reminder", "slots": [{"slot_type": "medication", "slot_value": "위장약"}, {"slot_type": "time", "slot_value": "식후"}]}
+{"text": "뼈가 부러진 거 같애", "intent": "emergency_call", "slots": []}
+{"text": "이번 주 비 있나?", "intent": "weather_query", "slots": [{"slot_type": "time", "slot_value": "이번 주"}, {"slot_type": "attribute", "slot_value": "비"}]}
+{"text": "불 80%로 해주면 좋겠다", "intent": "set_brightness", "slots": [{"slot_type": "level", "slot_value": "80%"}]}
+{"text": "지금 체감온도 몇이야?", "intent": "weather_query", "slots": [{"slot_type": "time", "slot_value": "지금"}, {"slot_type": "attribute", "slot_value": "체감온도"}]}
+{"text": "주방 불 이제 꺼줘", "intent": "turn_off", "slots": [{"slot_type": "location", "slot_value": "주방"}, {"slot_type": "device", "slot_value": "불"}]}
+{"text": "눈앞이 캄캄혀", "intent": "emergency_call", "slots": []}
+{"text": "침실 불 키줘", "intent": "turn_on", "slots": [{"slot_type": "location", "slot_value": "침실"}, {"slot_type": "device", "slot_value": "불"}]}
+{"text": "현관 조명 좀 켜주게", "intent": "turn_on", "slots": [{"slot_type": "location", "slot_value": "현관"}, {"slot_type": "device", "slot_value": "조명"}]}
+{"text": "수면 모드 켜주게", "intent": "ambient_mode", "slots": [{"slot_type": "mode", "slot_value": "수면"}]}
+{"text": "불 키줘", "intent": "turn_on", "slots": [{"slot_type": "device", "slot_value": "불"}]}
+{"text": "불 좀 줄여봐", "intent": "set_brightness", "slots": [{"slot_type": "level", "slot_value": "줄여"}]}
+{"text": "오늘 날짜가 며칠인겨", "intent": "time_query", "slots": [{"slot_type": "attribute", "slot_value": "날짜"}]}
+{"text": "보일러 좀 올려줘", "intent": "set_temperature", "slots": [{"slot_type": "device", "slot_value": "보일러"}]}
+{"text": "감기약 오늘 먹어야 하나", "intent": "medication_reminder", "slots": [{"slot_type": "medication", "slot_value": "감기약"}, {"slot_type": "time", "slot_value": "오늘"}]}
+{"text": "할머니 아스피린 아침 식후에 드셔야 해", "intent": "set_medication_schedule", "slots": [{"slot_type": "patient", "slot_value": "할머니"}, {"slot_type": "medication", "slot_value": "아스피린"}, {"slot_type": "time", "slot_value": "아침 식후"}]}
+{"text": "모레 비바람 온대?", "intent": "weather_query", "slots": [{"slot_type": "time", "slot_value": "모레"}, {"slot_type": "attribute", "slot_value": "비바람"}]}
+{"text": "화장실 조명 좀 꺼주게", "intent": "turn_off", "slots": [{"slot_type": "location", "slot_value": "화장실"}, {"slot_type": "device", "slot_value": "조명"}]}
+{"text": "주방 불 켜주소", "intent": "turn_on", "slots": [{"slot_type": "location", "slot_value": "주방"}, {"slot_type": "device", "slot_value": "불"}]}
+{"text": "주방 선풍기 좀 멈춰줘", "intent": "turn_off", "slots": [{"slot_type": "location", "slot_value": "주방"}, {"slot_type": "device", "slot_value": "선풍기"}]}
+{"text": "당뇨약 지금 먹어야 되나", "intent": "medication_reminder", "slots": [{"slot_type": "medication", "slot_value": "당뇨약"}, {"slot_type": "time", "slot_value": "지금"}]}
+{"text": "더워 죽겠네", "intent": "set_temperature", "slots": []}
+{"text": "답답한디 환기 해주라", "intent": "ambient_mode", "slots": [{"slot_type": "mode", "slot_value": "환기"}]}
+{"text": "오늘 음력 날짜 있나", "intent": "time_query", "slots": [{"slot_type": "attribute", "slot_value": "음력"}, {"slot_type": "attribute", "slot_value": "날짜"}]}
+{"text": "난방 온도 28도로 해주게", "intent": "set_temperature", "slots": [{"slot_type": "device", "slot_value": "난방"}, {"slot_type": "value", "slot_value": "28"}]}
+{"text": "골다공증약 오늘 먹을 차례여", "intent": "medication_reminder", "slots": [{"slot_type": "medication", "slot_value": "골다공증약"}, {"slot_type": "time", "slot_value": "오늘"}]}
+{"text": "눈약 넣을 시간 됐나", "intent": "medication_reminder", "slots": [{"slot_type": "medication", "slot_value": "눈약"}]}
+{"text": "나 좀 살려주게", "intent": "emergency_call", "slots": []}
+{"text": "나갈 준비로 바꿔줘", "intent": "ambient_mode", "slots": [{"slot_type": "mode", "slot_value": "나갈 준비"}]}
+{"text": "집 비움 모드 해줄래", "intent": "ambient_mode", "slots": [{"slot_type": "mode", "slot_value": "집 비움"}]}
+{"text": "수면제 자기 전에 드셔야 해요", "intent": "set_medication_schedule", "slots": [{"slot_type": "medication", "slot_value": "수면제"}, {"slot_type": "time", "slot_value": "자기 전"}]}
+{"text": "오늘이 양력 며칠이래", "intent": "time_query", "slots": [{"slot_type": "attribute", "slot_value": "양력"}, {"slot_type": "attribute", "slot_value": "며칠"}]}
+{"text": "큰일 났다", "intent": "emergency_call", "slots": []}
+{"text": "뜨거워", "intent": "set_temperature", "slots": []}
+{"text": "오늘 공기 맑어?", "intent": "weather_query", "slots": [{"slot_type": "time", "slot_value": "오늘"}, {"slot_type": "attribute", "slot_value": "공기"}]}
+{"text": "방 조명 좀 꺼줄래", "intent": "turn_off", "slots": [{"slot_type": "location", "slot_value": "방"}, {"slot_type": "device", "slot_value": "조명"}]}
+{"text": "아무나 좀 불러줘", "intent": "emergency_call", "slots": []}
+{"text": "에어컨 켜라", "intent": "turn_on", "slots": [{"slot_type": "device", "slot_value": "에어컨"}]}
+{"text": "나 쫌 살려도", "intent": "emergency_call", "slots": []}
+{"text": "변비약 자기 전에 알려줘", "intent": "medication_reminder", "slots": [{"slot_type": "medication", "slot_value": "변비약"}, {"slot_type": "time", "slot_value": "자기 전"}]}
+{"text": "오후 영양제 챙기라 했나", "intent": "medication_reminder", "slots": [{"slot_type": "time", "slot_value": "오후"}, {"slot_type": "medication", "slot_value": "영양제"}]}
+{"text": "방 불 좀 약하게 해주게", "intent": "set_brightness", "slots": [{"slot_type": "location", "slot_value": "방"}, {"slot_type": "level", "slot_value": "약하게"}]}
+{"text": "불 좀 키라", "intent": "turn_on", "slots": [{"slot_type": "device", "slot_value": "불"}]}
+{"text": "공기 순환으로 해줘", "intent": "ambient_mode", "slots": [{"slot_type": "mode", "slot_value": "공기 순환"}]}
+{"text": "혼자 못 하겄어 도와줘", "intent": "emergency_call", "slots": []}
+{"text": "TV 좀 틀어봐라", "intent": "turn_on", "slots": [{"slot_type": "device", "slot_value": "TV"}]}

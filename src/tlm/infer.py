@@ -223,7 +223,7 @@ class KoMiniLMTLM:
         self._tokenizer = AutoTokenizer.from_pretrained(MultiTaskModelWithCRF.BASE_MODEL)
         self._model = MultiTaskModelWithCRF.load(str(self.MODEL_PATH))
 
-    def predict(self, text: str) -> TLMOutput:
+    def predict(self, text: str, build_command: bool = True) -> TLMOutput:
         import torch
 
         enc = self._tokenizer(
@@ -250,7 +250,9 @@ class KoMiniLMTLM:
         slot_pred_ids = self._model.predict_slots(out["slot_logits"], attention_mask)[0]
         slots = self._decode_slots(text, slot_pred_ids, offset_mapping, attention_mask[0])
 
-        command, response_text = _build_command(intent, slots, text)
+        command, response_text = ({}, "")
+        if build_command:
+            command, response_text = _build_command(intent, slots, text)
 
         return TLMOutput(
             intent=intent,

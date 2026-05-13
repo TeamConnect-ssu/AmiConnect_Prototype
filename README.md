@@ -35,11 +35,14 @@ src/cloud_llm/          Mindlogic Gateway NLU fallback
 src/stt/                Moonshine STT wrapper
 src/tts/                system/MeloTTS wrapper
 src/executor/           mock command executor
+scripts/eval_nlu.py     KoMiniLM NLU 평가 스크립트
 models/tlm/...          MVP 재현용 fine-tuned TLM checkpoint
 data/demo/              데모용 복약 일정 데이터
+data/processed/valid.jsonl  NLU 검증용 validation split
 ```
 
 학습 데이터, 생성된 음성 파일, 개인 환경 변수 파일, 내부 팀 문서는 포함하지 않았습니다.
+검증 재현을 위한 작은 validation split만 포함했습니다.
 
 ## 빠른 실행
 
@@ -64,6 +67,7 @@ python -m src.orchestrator --text "거실 불 꺼줘" --privacy --tts-backend sy
 Gateway fallback route 확인:
 
 ```bash
+AMICONNECT_LOCAL_CONFIDENCE_THRESHOLD=0.99 \
 python -m src.orchestrator --text "자기 전 분위기로 해줘" --tts-backend system
 ```
 
@@ -109,6 +113,37 @@ python -m src.orchestrator --text "자기 전 분위기로 해줘" --privacy --t
 
 출력에는 intent, slot, route, confidence, command, 응답 텍스트가 포함됩니다.
 
+## 검증 결과
+
+아래 숫자는 현재 저장소에 포함된 `models/tlm/kominilm-finetuned/model.pt`와
+`data/processed/valid.jsonl`을 사용해 직접 측정한 결과입니다.
+모델 로드와 tokenizer warm-up 시간은 latency에서 제외했습니다.
+
+```bash
+python scripts/eval_nlu.py
+```
+
+```text
+dataset: data/processed/valid.jsonl
+cases: 46
+intent accuracy: 43/46 = 93.5%
+strict slot exact match: 22/46 = 47.8%
+joint exact match: 21/46 = 45.7%
+NLU latency: warm inference mean 약 10ms, p95 약 10-12ms
+```
+
+`intent accuracy`는 사용자의 발화를 어떤 작업으로 분류했는지 보는 주 지표입니다.
+`strict slot exact match`는 slot 문자열이 조사/어미 포함 여부까지 정확히 일치해야 하는 엄격한 참고 지표입니다.
+latency는 실행 기기와 백그라운드 상태에 따라 조금 달라지므로, 현재 환경의 정확한 값은 `python scripts/eval_nlu.py`로 다시 확인합니다.
+
+## 구성 요소
+
+- STT: `src/stt/moonshine.py`의 Moonshine wrapper가 WAV 또는 마이크 입력을 텍스트로 변환합니다.
+- NLU/TLM: `src/tlm/infer.py`의 fine-tuned KoMiniLM이 intent, slot, confidence를 예측합니다.
+- LLM fallback: `src/cloud_llm/gateway.py`의 Mindlogic Gateway client가 복합 발화를 JSON command로 변환합니다.
+- LLM prompt: `src/cloud_llm/gateway.py`의 `SYSTEM_PROMPT`에 시니어 케어 스마트홈 NLU 지시문이 들어 있습니다.
+- TTS: `src/tts/system.py`는 macOS `say`, `src/tts/melo.py`는 MeloTTS 파일 생성 방식을 사용합니다.
+
 ## 예시 명령
 
 ```text
@@ -139,6 +174,7 @@ FACTCHAT_API_KEY=your-factchat-api-key-here
 FACTCHAT_BASE_URL=https://factchat-cloud.mindlogic.ai/v1/gateway
 FACTCHAT_MODEL=gemini-3.1-flash-lite-preview
 AMICONNECT_PRIVACY_MODE=false
+AMICONNECT_LOCAL_CONFIDENCE_THRESHOLD=0.65
 AMICONNECT_TTS_BACKEND=system
 ```
 
@@ -155,5 +191,6 @@ API key는 로컬 `.env`에만 두어야 합니다.
 - executor는 실제 IoT 기기 제어가 아니라 데모용 mock layer입니다.
 - fine-tuned KoMiniLM checkpoint는 GitHub 단일 파일 제한에 맞는 약 89MB 파일로 포함됩니다.
 - Gateway fallback은 별도 `FACTCHAT_API_KEY`가 있어야 동작합니다. Privacy mode/local demo는 키 없이도 실행됩니다.
+- Gateway fallback은 특정 문장을 하드코딩하지 않고, local NLU confidence가 `AMICONNECT_LOCAL_CONFIDENCE_THRESHOLD`보다 낮을 때 사용합니다.
 - Gateway fallback은 API와 네트워크 상태에 따라 latency가 달라질 수 있습니다.
 - MeloTTS는 파일 생성 기반으로 동작하며, macOS에서는 `say`가 가장 간단한 TTS 옵션입니다.
