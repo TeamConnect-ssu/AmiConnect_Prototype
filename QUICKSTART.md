@@ -33,13 +33,6 @@ cp .env.example .env
 
 ## 3. 텍스트로 먼저 동작 확인 (마이크 X)
 
-발표/캡처용 runner:
-
-```bash
-python demo/mvp_runner_dongu.py
-python demo/mvp_runner_prugio.py
-```
-
 ```bash
 python -m src.orchestrator --text "거실 불 꺼줘"
 python -m src.orchestrator --text "약 먹을 시간 됐나?"
