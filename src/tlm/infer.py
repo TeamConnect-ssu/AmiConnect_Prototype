@@ -1,7 +1,8 @@
-"""TLM inference: RuleTLM (regex fallback) and KoMiniLMTLM (fine-tuned model).
+"""TLM inference: RuleTLM fallback and fine-tuned KoMiniLM NLU.
 
 KoMiniLMTLM — loads MultiTaskModelWithCRF from models/tlm/kominilm-finetuned.
-               Intent + slots both come from the model (no regex for slots).
+               Intent comes from the model. Slots are decoded with BIO/CRF and
+               then conservatively supplemented by a domain slot normalizer.
 RuleTLM      — used only when fine-tuned model is unavailable.
 """
 from __future__ import annotations

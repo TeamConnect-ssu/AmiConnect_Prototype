@@ -141,7 +141,7 @@ latency는 실행 기기와 백그라운드 상태에 따라 조금 달라지므
 ## 구성 요소
 
 - STT: `src/stt/moonshine.py`의 Moonshine wrapper가 WAV 또는 마이크 입력을 텍스트로 변환합니다.
-- NLU/TLM: `src/tlm/infer.py`의 fine-tuned KoMiniLM이 intent, slot, confidence를 예측합니다.
+- NLU/TLM: `src/tlm/infer.py`의 fine-tuned KoMiniLM이 intent와 confidence를 예측하고, BIO/CRF slot 출력에 도메인 slot normalizer를 적용합니다.
 - LLM fallback: `src/cloud_llm/gateway.py`의 Mindlogic Gateway client가 복합 발화를 JSON command로 변환합니다.
 - LLM prompt: `src/cloud_llm/gateway.py`의 `SYSTEM_PROMPT`에 시니어 케어 스마트홈 NLU 지시문이 들어 있습니다.
 - TTS: `src/tts/system.py`는 macOS `say`, `src/tts/melo.py`는 MeloTTS 파일 생성 방식을 사용합니다.
